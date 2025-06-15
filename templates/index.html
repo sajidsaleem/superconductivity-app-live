@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Superconductivity Papers</title>
+    <title>{{ page_title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    <form class="search-form" method="post">
+    <form class="search-form" method="post" action="{{ url_for('index') }}">
         <input type="text" name="query" placeholder="Search by title or abstract..." value="{{ query }}">
         <button type="submit">Search</button>
+        <a href="{{ url_for('index') }}" class="clear-button">Clear</a>
     </form>
 
     <h1>Latest Papers in Superconductivity</h1>
@@ -23,7 +24,11 @@
             <p>{{ paper.summary }}</p>
         </div>
     {% else %}
-        <p>No papers found matching your search.</p>
+        {% if query %}
+            <p>No papers found matching your search for "<strong>{{ query }}</strong>".</p>
+        {% else %}
+            <p>No papers found in the database.</p>
+        {% endif %}
     {% endfor %}
 
     {% if total_pages > 1 %}

@@ -16,3 +16,18 @@ a:hover { text-decoration: underline; }
 .pagination a:hover { background-color: #e9ecef; }
 .pagination .current { background-color: #007bff; color: white; border-color: #007bff; }
 .pagination .disabled { color: #6c757d; background-color: #e9ecef; border-color: #dee2e6; }
+
+/* NEW: Style for the Clear Search button */
+.clear-button {
+    padding: 0.5em 1em;
+    font-size: 1em;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-left: 0.5em;
+}
+.clear-button:hover {
+    background-color: #e2e6ea;
+}

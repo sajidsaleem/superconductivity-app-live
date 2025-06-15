@@ -1,17 +1,19 @@
 from flask import Flask, render_template, request
 import psycopg
 import math
-import os # Import the 'os' library
-from dotenv import load_dotenv # Import load_dotenv
-
-load_dotenv() # Load variables from the .env file
 
 # --- App Configuration ---
 PAPERS_PER_PAGE = 10
 
 # --- Database Connection Details ---
-# Securely load the database URL from the environment
-DATABASE_URL = os.environ.get('DATABASE_URL')
+# Using the simple, direct connection for local development
+db_params = {
+    'dbname': 'superconductivity_db',
+    'user': 'sajidsaleem', # Your macOS username
+    'password': '',
+    'host': '127.0.0.1', # Using the explicit IP for reliability
+    'port': '5432'
+}
 
 # --- Initialize the Flask App ---
 app = Flask(__name__)
@@ -33,7 +35,7 @@ def index():
     offset = (page - 1) * PAPERS_PER_PAGE
     total_papers = 0
     try:
-        with psycopg.connect(DATABASE_URL) as conn:
+        with psycopg.connect(**db_params) as conn:
             with conn.cursor() as cur:
                 
                 base_query = "FROM papers"
@@ -58,18 +60,8 @@ def index():
                 main_query += " ORDER BY published_date DESC LIMIT %s OFFSET %s"
                 params.extend([PAPERS_PER_PAGE, offset])
                 
-                # === START CORRECTED DEBUGGING SECTION ===
-                print("--- DEBUG: CHECKING DATABASE QUERY ---")
-                print(f"DEBUG SQL Template: {main_query}")
-                print(f"DEBUG SQL Params: {params}")
-
                 cur.execute(main_query, params)
                 db_papers = cur.fetchall()
-                
-                print(f"DEBUG: Rows fetched from DB: {len(db_papers)}")
-                if db_papers:
-                    print(f"DEBUG: First row data: {db_papers[0]}")
-                # === END CORRECTED DEBUGGING SECTION ===
                 
                 for paper in db_papers:
                     papers.append({
@@ -85,8 +77,12 @@ def index():
 
     total_pages = math.ceil(total_papers / PAPERS_PER_PAGE)
 
+    # NEW: Create the dynamic page title
+    page_title = f"Search results for: {query}" if query else "Superconductivity Papers"
+
     return render_template('index.html', 
                            papers=papers, 
                            query=query,
                            page=page,
-                           total_pages=total_pages)
+                           total_pages=total_pages,
+                           page_title=page_title) # Pass the new title
