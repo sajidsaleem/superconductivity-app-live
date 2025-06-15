@@ -1,29 +1,28 @@
-from flask import Flask, render_template, request
+import os
 import psycopg
 import math
+from flask import Flask, render_template, request
+from dotenv import load_dotenv
+
+# This loads the .env file for local development.
+# On Render, the environment variables are set in the dashboard.
+load_dotenv()
 
 # --- App Configuration ---
 PAPERS_PER_PAGE = 10
 
-# --- Database Connection Details ---
-# Using the simple, direct connection for local development
-db_params = {
-    'dbname': 'superconductivity_db',
-    'user': 'sajidsaleem', # Your macOS username
-    'password': '',
-    'host': '127.0.0.1', # Using the explicit IP for reliability
-    'port': '5432'
-}
+# --- Database Connection ---
+# This will get the DATABASE_URL from Render's environment variables when deployed,
+# and from your .env file when run locally.
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # --- Initialize the Flask App ---
 app = Flask(__name__)
 
-# --- Define the main page route ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
     papers = []
     query = ""
-    
     page = request.args.get('page', 1, type=int)
 
     if request.method == 'POST':
@@ -35,9 +34,9 @@ def index():
     offset = (page - 1) * PAPERS_PER_PAGE
     total_papers = 0
     try:
-        with psycopg.connect(**db_params) as conn:
+        # Connect using the DATABASE_URL from the environment
+        with psycopg.connect(DATABASE_URL) as conn:
             with conn.cursor() as cur:
-                
                 base_query = "FROM papers"
                 count_query = "SELECT COUNT(*) " + base_query
                 main_query = "SELECT id, title, author, published_date, summary, pdf_url " + base_query
@@ -72,17 +71,14 @@ def index():
                         'summary': paper[4],
                         'pdf_url': paper[5]
                     })
-    except psycopg.Error as e:
+    except Exception as e:
         print(f"Database error: {e}")
 
     total_pages = math.ceil(total_papers / PAPERS_PER_PAGE)
-
-    # NEW: Create the dynamic page title
-    page_title = f"Search results for: {query}" if query else "Superconductivity Papers"
 
     return render_template('index.html', 
                            papers=papers, 
                            query=query,
                            page=page,
                            total_pages=total_pages,
-                           page_title=page_title) # Pass the new title
+                           page_title="Superconductivity Papers") # Added a default title
